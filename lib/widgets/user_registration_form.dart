@@ -13,39 +13,30 @@ class _UserRegistrationFormState extends State<UserRegistrationForm> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
-  
+
   bool _isLoading = false;
   String _message = '';
 
-  // BUG: Email validation is completely wrong
   bool isValidEmail(String email) {
-    return email.contains('@'); // Too simple! Accepts invalid emails like "a@" or "@b"
+    return email.contains('@');
   }
 
-  // BUG: Password validation missing entirely
   bool isValidPassword(String password) {
-    return true; // Always returns true! No strength checking
+    return true;
   }
 
-  // BUG: Form submission doesn't validate properly
   Future<void> _submitForm() async {
     setState(() {
       _isLoading = true;
       _message = '';
     });
 
-    // BUG: No form validation before submission
-    String email = _emailController.text;
-    String password = _passwordController.text;
-    String confirmPassword = _confirmPasswordController.text;
-    String name = _nameController.text;
-
     // Simulate API call
     await Future.delayed(const Duration(seconds: 2));
 
     setState(() {
       _isLoading = false;
-      _message = 'Registration successful!'; // Always successful, even with empty fields!
+      _message = 'Registration successful!';
     });
   }
 
@@ -142,7 +133,9 @@ class _UserRegistrationFormState extends State<UserRegistrationForm> {
                 child: Text(
                   _message,
                   style: TextStyle(
-                    color: _message.contains('successful') ? Colors.green : Colors.red,
+                    color: _message.contains('successful')
+                        ? Colors.green
+                        : Colors.red,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,

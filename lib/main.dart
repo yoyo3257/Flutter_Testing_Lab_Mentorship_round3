@@ -21,6 +21,3 @@ class FlutterTestingLabApp extends StatelessWidget {
     );
   }
 }
-
-
-
