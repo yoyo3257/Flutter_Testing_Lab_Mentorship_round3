@@ -1,4 +1,3 @@
-# flutter_testing_lab
 # Bug Fix Exercise
 
 ## Instructions
