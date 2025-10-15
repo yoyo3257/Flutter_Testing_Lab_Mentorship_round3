@@ -1,6 +1,4 @@
-# Bug Fix Exercise
-
-## Instructions
+# Instructions
 
 1. **Fork this repository** to your own GitHub account
 2. **Clone YOUR fork** (not this original repo)
