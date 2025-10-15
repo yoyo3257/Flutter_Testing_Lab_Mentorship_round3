@@ -1,16 +1,16 @@
 # flutter_testing_lab
+# Bug Fix Exercise
 
-A new Flutter project.
+## Instructions
 
-## Getting Started
+1. **Fork this repository** to your own GitHub account
+2. **Clone YOUR fork** (not this original repo)
+3. Create a branch: `git checkout -b fix-bug-1`
+4. Fix the bugs in your code
+5. Commit and push to YOUR fork
+6. **Create a Pull Request within YOUR fork** (from your feature branch to your fork's main)
+7. Merge it in your fork
 
-This project is a starting point for a Flutter application.
+**⚠️ Do NOT create pull requests back to this original repository!**
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This is a personal exercise. Each person should maintain their own fixed version.
