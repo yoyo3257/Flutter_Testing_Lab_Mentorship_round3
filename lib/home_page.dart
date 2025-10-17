@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   final List<Widget> _tabViews = [
     const UserRegistrationForm(),
-    const ShoppingCart(),
+     ShoppingCart(),
     const WeatherDisplay(),
   ];
 
@@ -79,24 +79,24 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.shade100,
+                color: Colors.lightGreen.shade100,
                 border: Border(
-                  bottom: BorderSide(color: Colors.orange.shade300),
+                  bottom: BorderSide(color: Colors.lightGreen.shade300),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
-                    Icons.warning,
-                    color: Colors.orange.shade700,
+                    Icons.check_box,
+                    color: Colors.lightGreen,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Current Widget: ${_getWidgetName(_currentIndex)} - Contains bugs that need fixing!',
+                      'Current Widget: ${_getWidgetName(_currentIndex)} - Bugs fixed successfully!',
                       style: TextStyle(
-                        color: Colors.orange.shade800,
+                        color: Colors.lightGreen.shade700,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -136,7 +136,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 Icon(Icons.info_outline, color: Colors.blue.shade700, size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  'Find and fix the bugs in each widget!',
+                  'I have Corrected each bug in each widget!',
                   style: TextStyle(
                     color: Colors.blue.shade700,
                     fontWeight: FontWeight.w500,
