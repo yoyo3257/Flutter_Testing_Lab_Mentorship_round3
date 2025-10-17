@@ -1,75 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../services/weather_service.dart';
+import '../weather_cubit/weather_cubit.dart';
+import '../weather_cubit/weather_state.dart';
 
-class WeatherDisplay extends StatefulWidget {
+class WeatherDisplay extends StatelessWidget {
   const WeatherDisplay({super.key});
 
   @override
-  State<WeatherDisplay> createState() => _WeatherDisplayState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) =>
+          WeatherCubit(weatherService: MockWeatherService())
+            ..loadWeather('New York'),
+      child: const WeatherView(),
+    );
+  }
 }
 
-class _WeatherDisplayState extends State<WeatherDisplay> {
-  WeatherData? _weatherData;
-  bool _isLoading = false;
-  String? _error;
-  bool _useFahrenheit = false;
-  String _selectedCity = 'New York';
+class WeatherView extends StatelessWidget {
+  const WeatherView({super.key});
 
-  final List<String> _cities = ['New York', 'London', 'Tokyo', 'Invalid City'];
-
-  double celsiusToFahrenheit(double celsius) {
-    return celsius * 9 / 5;
-  }
-
-  double fahrenheitToCelsius(double fahrenheit) {
-    return fahrenheit - 32 * 5 / 9;
-  }
-
-  // Simulate API call that sometimes returns null or malformed data
-  Future<Map<String, dynamic>?> _fetchWeatherData(String city) async {
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (city == 'Invalid City') {
-      return null;
-    }
-
-    
-    if (DateTime.now().millisecond % 4 == 0) {
-      return {'city': city, 'temperature': 22.5}; 
-    }
-
-    return {
-      'city': city,
-      'temperature': city == 'London' ? 15.0 : (city == 'Tokyo' ? 25.0 : 22.5),
-      'description': city == 'London'
-          ? 'Rainy'
-          : (city == 'Tokyo' ? 'Cloudy' : 'Sunny'),
-      'humidity': city == 'London' ? 85 : (city == 'Tokyo' ? 70 : 65),
-      'windSpeed': city == 'London' ? 8.5 : (city == 'Tokyo' ? 5.2 : 12.3),
-      'icon': city == 'London' ? '🌧️' : (city == 'Tokyo' ? '☁️' : '☀️'),
-    };
-  }
-
-  Future<void> _loadWeather() async {
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
-    }
-
-    
-    final data = await _fetchWeatherData(_selectedCity);
-    setState(() {
-      _weatherData = WeatherData.fromJson(data); 
-      _isLoading = false;
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadWeather();
-  }
+  final List<String> _cities = const [
+    'New York',
+    'London',
+    'Tokyo',
+    'Invalid City',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -78,130 +35,188 @@ class _WeatherDisplayState extends State<WeatherDisplay> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // City selection
-          Row(
-            children: [
-              const Text('City: '),
-              const SizedBox(width: 8),
-              Expanded(
-                child: DropdownButton<String>(
-                  value: _selectedCity,
-                  isExpanded: true,
-                  items: _cities.map((city) {
-                    return DropdownMenuItem(value: city, child: Text(city));
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedCity = value;
-                      });
-                      _loadWeather();
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _loadWeather,
-                child: const Text('Refresh'),
-              ),
-            ],
-          ),
+          _buildCitySelection(context),
           const SizedBox(height: 16),
+          _buildTemperatureUnitToggle(context),
+          const SizedBox(height: 16),
+          _buildWeatherContent(context),
+        ],
+      ),
+    );
+  }
 
-          // Temperature unit toggle
-          Row(
-            children: [
-              const Text('Temperature Unit:'),
-              const SizedBox(width: 10),
-              Switch(
-                value: _useFahrenheit,
+  Widget _buildCitySelection(BuildContext context) {
+    final cubit = context.read<WeatherCubit>();
+
+    return Row(
+      children: [
+        const Text('City: '),
+        const SizedBox(width: 8),
+        Expanded(
+          child: BlocBuilder<WeatherCubit, WeatherState>(
+            builder: (context, state) {
+              return DropdownButton<String>(
+                value: cubit.currentCity,
+                isExpanded: true,
+                items: _cities.map((city) {
+                  return DropdownMenuItem(value: city, child: Text(city));
+                }).toList(),
                 onChanged: (value) {
-                  setState(() {
-                    _useFahrenheit = value;
-                  });
+                  if (value != null) {
+                    cubit.loadWeather(value);
+                  }
                 },
-              ),
-              Text(_useFahrenheit ? 'Fahrenheit' : 'Celsius'),
-            ],
+              );
+            },
           ),
-          const SizedBox(height: 16),
+        ),
+        const SizedBox(width: 8),
+        BlocBuilder<WeatherCubit, WeatherState>(
+          builder: (context, state) {
+            return ElevatedButton(
+              onPressed: state is WeatherLoading
+                  ? null
+                  : () {
+                      cubit.refreshWeather();
+                    },
+              child: const Text('Refresh'),
+            );
+          },
+        ),
+      ],
+    );
+  }
 
-          if (_isLoading && _error == null)
-            const Center(child: CircularProgressIndicator())
-          
-          else if (_weatherData != null)
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          _weatherData!.icon,
-                          style: const TextStyle(fontSize: 48),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _weatherData!.city,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                _weatherData!.description,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: Text(
-                        _useFahrenheit
-                            ? '${celsiusToFahrenheit(_weatherData!.temperatureCelsius).toStringAsFixed(1)}°F'
-                            : '${_weatherData!.temperatureCelsius.toStringAsFixed(1)}°C',
+  Widget _buildTemperatureUnitToggle(BuildContext context) {
+    return BlocBuilder<WeatherCubit, WeatherState>(
+      builder: (context, state) {
+        final cubit = context.read<WeatherCubit>();
+
+        return Row(
+          children: [
+            const Text('Temperature Unit:'),
+            const SizedBox(width: 10),
+            Switch(
+              value: cubit.useFahrenheit,
+              onChanged: (value) {
+                cubit.toggleTemperatureUnit();
+              },
+            ),
+            Text(cubit.useFahrenheit ? 'Fahrenheit' : 'Celsius'),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildWeatherContent(BuildContext context) {
+    return BlocBuilder<WeatherCubit, WeatherState>(
+      builder: (context, state) {
+        if (state is WeatherLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is WeatherError) {
+          return _buildErrorCard(context, state.message);
+        } else if (state is WeatherLoaded) {
+          return _buildWeatherCard(context, state);
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildErrorCard(BuildContext context, String errorMessage) {
+    return Card(
+      color: Colors.red.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage,
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () {
+                context.read<WeatherCubit>().refreshWeather();
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeatherCard(BuildContext context, WeatherLoaded state) {
+    final cubit = context.read<WeatherCubit>();
+    final weatherData = state.weatherData;
+
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(weatherData.icon, style: const TextStyle(fontSize: 48)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        weatherData.city,
                         style: const TextStyle(
-                          fontSize: 48,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildWeatherDetail(
-                          'Humidity',
-                          '${_weatherData!.humidity}%',
-                          Icons.water_drop,
+                      Text(
+                        weatherData.description,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey,
                         ),
-                        _buildWeatherDetail(
-                          'Wind Speed',
-                          '${_weatherData!.windSpeed} km/h',
-                          Icons.air,
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                '${cubit.getDisplayTemperature(weatherData.temperatureCelsius).toStringAsFixed(1)}${cubit.getTemperatureUnit()}',
+                style: const TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            )
-          
-        ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildWeatherDetail(
+                  'Humidity',
+                  '${weatherData.humidity}%',
+                  Icons.water_drop,
+                ),
+                _buildWeatherDetail(
+                  'Wind Speed',
+                  '${weatherData.windSpeed} km/h',
+                  Icons.air,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -217,36 +232,6 @@ class _WeatherDisplayState extends State<WeatherDisplay> {
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ],
-    );
-  }
-}
-
-class WeatherData {
-  final String city;
-  final double temperatureCelsius;
-  final String description;
-  final int humidity;
-  final double windSpeed;
-  final String icon;
-
-  WeatherData({
-    required this.city,
-    required this.temperatureCelsius,
-    required this.description,
-    required this.humidity,
-    required this.windSpeed,
-    required this.icon,
-  });
-
-  
-  factory WeatherData.fromJson(Map<String, dynamic>? json) {
-    return WeatherData(
-      city: json!['city'],
-      temperatureCelsius: json['temperature'].toDouble(),
-      description: json['description'],
-      humidity: json['humidity'], 
-      windSpeed: json['windSpeed'].toDouble(), 
-      icon: json['icon'], 
     );
   }
 }
